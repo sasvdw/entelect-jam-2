@@ -11,8 +11,9 @@ namespace Assets.Scripts.Models
         private bool isGrounded;
         private bool canDoubleJump;
         private bool wasKicked;
-        private PlayerType playerInRangeToKick;
+        private Player playerInRangeToKick;
         private float direction;
+        private Player playerKickedBy;
 
         public float MoveSpeedMagnitude
         {
@@ -22,19 +23,28 @@ namespace Assets.Scripts.Models
             }
         }
 
-        public float JumpMagnitude
+        public Vector2 JumpForce
         {
             get
             {
-                return this.jumpModifier;
+                return Vector2.up * this.jumpModifier;
             }
         }
 
-        public float KickMagnitude
+        public Vector2 KickForce
         {
             get
             {
-                return this.kickModifier * this.direction;
+                if(this.playerKickedBy == null)
+                {
+                    return Vector2.zero;
+                }
+
+                var verticalComponent = Vector2.up;
+                var horizontalComponent = Vector2.right * this.playerKickedBy.direction;
+                var kickForce = (verticalComponent + horizontalComponent) * this.playerKickedBy.kickModifier;
+
+                return kickForce;
             }
         }
 
@@ -42,7 +52,15 @@ namespace Assets.Scripts.Models
         {
             get
             {
-                return this.isGrounded || this.canDoubleJump;
+                return this.isGrounded && !this.wasKicked || this.canDoubleJump;
+            }
+        }
+
+        public bool CanMove
+        {
+            get
+            {
+                return !this.wasKicked;
             }
         }
 
@@ -55,45 +73,68 @@ namespace Assets.Scripts.Models
         }
 
         public bool WasMoving { get; private set; }
+        public bool HadJumped { get; private set; }
 
         public Player()
         {
             this.moveSpeed = 10.0f;
             this.jumpModifier = 20.0f;
-            this.kickModifier = 20.0f;
-            this.playerInRangeToKick = (PlayerType)(-1);
+            this.kickModifier = 15.0f;
+            this.playerInRangeToKick = null;
         }
 
         public void Landed()
         {
             this.isGrounded = true;
             this.canDoubleJump = true;
+            this.wasKicked = false;
+            this.HadJumped = false;
         }
 
-        public void Jumped()
+        public void Jump()
         {
             if(!this.isGrounded)
             {
                 this.canDoubleJump = false;
+                this.HadJumped = true;
+                this.wasKicked = false;
                 return;
             }
 
             this.isGrounded = false;
+            this.HadJumped = true;
         }
 
-        public void SetPlayerInRangeToKick(PlayerType playerToKick)
+        public void Jumped()
+        {
+            this.HadJumped = false;
+        }
+
+        public void SetPlayerInRangeToKick(Player playerToKick)
         {
             this.playerInRangeToKick = playerToKick;
         }
 
-        public PlayerType Kick()
+        public void Kick()
         {
-            return this.playerInRangeToKick;
+            if(this.playerInRangeToKick == null)
+            {
+                return;
+            }
+
+            this.playerInRangeToKick.playerKickedBy = this;
+            this.playerInRangeToKick.wasKicked = true;
+            this.playerInRangeToKick.isGrounded = false;
+        }
+
+        public void Kicked()
+        {
+            this.playerKickedBy = null;
         }
 
         public void SetPlayerOutRangeForKicking()
         {
-            this.playerInRangeToKick = (PlayerType)(-1);
+            this.playerInRangeToKick = null;
         }
 
         public void StartedMoving(float input)
@@ -103,6 +144,11 @@ namespace Assets.Scripts.Models
         }
 
         public void StopedMoving()
+        {
+            this.WasMoving = false;
+        }
+
+        public void Moved()
         {
             this.WasMoving = false;
         }

@@ -6,9 +6,7 @@ using UnityEngine;
 public class Character : MonoBehaviour, IPlayerView
 {
     private new Rigidbody2D rigidbody2D;
-    private Vector2 moveSpeed;
     private Vector2 jumpForce;
-    private Vector2 kickForce;
     private IGamePresenter gamePresenter;
 
     public PlayerType Player;
@@ -21,17 +19,19 @@ public class Character : MonoBehaviour, IPlayerView
         }
     }
 
-    private float facingDirection
+    private Vector2 VerticalVelocity
     {
         get
         {
-            return this.transform.localScale.x;
+            return Vector2.up * this.rigidbody2D.velocity.y;
         }
     }
 
     public void Move(float speed)
     {
-        this.moveSpeed = Vector2.right * speed;
+        var moveSpeed = Vector2.right * speed;
+
+        this.rigidbody2D.velocity = this.VerticalVelocity + moveSpeed;
 
         var directionModifier = Mathf.Sign(speed);
         this.transform.localScale = new Vector2(directionModifier, 1);
@@ -39,19 +39,23 @@ public class Character : MonoBehaviour, IPlayerView
 
     public void Stop()
     {
-        this.moveSpeed = Vector2.zero;
+        this.rigidbody2D.velocity = this.VerticalVelocity + Vector2.zero;
     }
 
-    public void Kick(float playerKickMagnitude)
+    public void Kick(Vector2 kickForce)
     {
-        var verticalComponent = Vector2.up * Mathf.Abs(playerKickMagnitude);
-        var horizontalComponent = Vector2.right * playerKickMagnitude;
-        this.kickForce = (verticalComponent + horizontalComponent) / 2;
+        if(kickForce == Vector2.zero)
+        {
+            return;
+        }
+
+        this.rigidbody2D.velocity = Vector2.zero;
+        this.rigidbody2D.AddForce(kickForce, ForceMode2D.Impulse);
     }
 
-    public void Jump(float jumpModifier)
+    public void Jump(Vector2 jumpForce)
     {
-        this.jumpForce = Vector2.up * jumpModifier;
+        this.rigidbody2D.AddForce(jumpForce, ForceMode2D.Impulse);
     }
 
     // Use this for initialization
@@ -68,24 +72,7 @@ public class Character : MonoBehaviour, IPlayerView
     //FixedUpdate is called every fixed framerate frame
     private void FixedUpdate()
     {
-        if(this.kickForce == Vector2.zero)
-        {
-            var verticalVelocity = Vector2.up * this.rigidbody2D.velocity.y;
-            this.rigidbody2D.velocity = verticalVelocity + this.moveSpeed;
-        }
-
-        if(this.jumpForce != Vector2.zero)
-        {
-            this.rigidbody2D.AddForce(this.jumpForce, ForceMode2D.Impulse);
-            this.jumpForce = Vector2.zero;
-        }
-
-        if (this.kickForce != Vector2.zero)
-        {
-            this.rigidbody2D.AddForce(this.kickForce, ForceMode2D.Impulse);
-            this.moveSpeed = Vector2.right * this.kickForce.x;
-            this.kickForce = Vector2.zero;
-        }
+        this.gamePresenter.StepPlayerPhysics(this.Player);
     }
 
     private void OnTriggerEnter2D(Collider2D other)

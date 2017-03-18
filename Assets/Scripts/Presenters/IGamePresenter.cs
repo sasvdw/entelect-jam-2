@@ -21,6 +21,8 @@ namespace Assets.Scripts.Presenters
         void HandleKickInput(PlayerType playerType);
 
         void PlayerOutRangeForKick(PlayerType playerKicking);
+
+        void StepPlayerPhysics(PlayerType playerType);
     }
 
     public class GamePresenter : IGamePresenter
@@ -58,16 +60,18 @@ namespace Assets.Scripts.Presenters
         public void HandleHorizontalInput(PlayerType playerType, float input)
         {
             var player = this.players[playerType];
-            var playerView = this.playerViews[playerType];
+
+            if(!player.CanMove)
+            {
+                return;
+            }
 
             if(Math.Abs(input) < 0.0001f && (!player.WasKicked || player.WasMoving))
             {
-                playerView.Stop();
                 player.StopedMoving();
                 return;
             }
 
-            playerView.Move(player.MoveSpeedMagnitude);
             player.StartedMoving(input);
         }
 
@@ -80,8 +84,7 @@ namespace Assets.Scripts.Presenters
                 return;
             }
 
-            this.playerViews[playerType].Jump(player.JumpMagnitude);
-            player.Jumped();
+            player.Jump();
         }
 
         public void PlayerLanded(PlayerType playerType)
@@ -89,29 +92,50 @@ namespace Assets.Scripts.Presenters
             this.players[playerType].Landed();
         }
 
-        public void PlayerInRangeForKick(PlayerType playerKicking, PlayerType playerToKick)
+        public void PlayerInRangeForKick(PlayerType playerTypeKicking, PlayerType playerTypeToKick)
         {
-            var player = this.players[playerKicking];
-            player.SetPlayerInRangeToKick(playerToKick);
+            var playerKicking = this.players[playerTypeKicking];
+            var playerToKick = this.players[playerTypeToKick];
+            playerKicking.SetPlayerInRangeToKick(playerToKick);
         }
 
         public void HandleKickInput(PlayerType playerType)
         {
-            var player = this.players[playerType];
-
-            var kick = player.Kick();
-
-            if(!this.playerViews.ContainsKey(kick))
-            {
-                return;
-            }
-
-            this.playerViews[kick].Kick(player.KickMagnitude);
+            this.players[playerType].Kick();
         }
 
         public void PlayerOutRangeForKick(PlayerType playerKicking)
         {
             this.players[playerKicking].SetPlayerOutRangeForKicking();
+        }
+
+        public void StepPlayerPhysics(PlayerType playerType)
+        {
+            var player = this.players[playerType];
+            var playerView = this.playerViews[playerType];
+
+            if(player.HadJumped)
+            {
+                playerView.Jump(player.JumpForce);
+                player.Jumped();
+            }
+
+            if (player.WasKicked)
+            {
+                playerView.Kick(player.KickForce);
+                player.Kicked();
+                return;
+            }
+
+            if (player.WasMoving)
+            {
+                playerView.Move(player.MoveSpeedMagnitude);
+            }
+
+            if(!player.WasMoving && !player.WasKicked)
+            {
+                playerView.Stop();
+            }
         }
     }
 }

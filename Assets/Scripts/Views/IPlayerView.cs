@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts.Models;
+using UnityEngine;
 
 namespace Assets.Scripts.Views
 {
@@ -8,10 +9,10 @@ namespace Assets.Scripts.Views
 
         void Move(float speed);
 
-        void Jump(float jumpModifier);
+        void Jump(Vector2 jumpModifier);
 
         void Stop();
 
-        void Kick(float playerKickMagnitude);
+        void Kick(Vector2 kickForce);
     }
 }
