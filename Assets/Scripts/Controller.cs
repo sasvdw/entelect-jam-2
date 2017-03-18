@@ -5,9 +5,22 @@ public class Controller : MonoBehaviour
     public float MaxSpeed = 10.0f;
     public float JumpModifier = 5.0f;
     private float horizontalInput;
-    private Rigidbody2D rigidbody2D;
+    private new Rigidbody2D rigidbody2D;
     private bool jumpButtonPressed;
+    private int collidersStandingOn;
 
+    private bool grounded
+    {
+        get
+        {
+            return this.collidersStandingOn > 0;
+        }
+    }
+
+    public Controller()
+    {
+        this.collidersStandingOn = 0;
+    }
     // Use this for initialization
 	private void Start ()
 	{
@@ -29,11 +42,29 @@ public class Controller : MonoBehaviour
         var moveSpeed = new Vector2(speed, this.rigidbody2D.velocity.y);
         this.rigidbody2D.velocity = moveSpeed;
 
-        if(this.jumpButtonPressed)
+        if(this.grounded  && this.jumpButtonPressed)
         {
             var jumpForce = new Vector2(0, this.JumpModifier);
 
             this.rigidbody2D.AddForce(jumpForce, ForceMode2D.Impulse);
         }
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if(other.isTrigger)
+        {
+            return;
+        }
+        this.collidersStandingOn++;
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if(other.isTrigger)
+        {
+            return;
+        }
+        this.collidersStandingOn--;
     }
 }
