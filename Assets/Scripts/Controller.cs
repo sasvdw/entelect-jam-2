@@ -18,12 +18,18 @@ public class Controller : MonoBehaviour
     {
         var horizontalInput = Input.GetAxisRaw("Horizontal");
         var jumpButtonPressed = Input.GetButtonDown("Jump");
+        var fire1ButtonPressed = Input.GetButtonDown("Fire1");
 
         this.gamePresenter.HandleHorizontalInput(this.Player, horizontalInput);
 
         if(jumpButtonPressed)
         {
             this.gamePresenter.HandleJumpInput(this.Player);
+        }
+
+        if(fire1ButtonPressed)
+        {
+            this.gamePresenter.HandleKickInput(this.Player);
         }
     }
 }

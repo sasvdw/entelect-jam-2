@@ -11,5 +11,7 @@ namespace Assets.Scripts.Views
         void Jump(float jumpModifier);
 
         void Stop();
+
+        void Kick(float playerKickMagnitude);
     }
 }

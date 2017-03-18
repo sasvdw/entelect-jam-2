@@ -1,19 +1,28 @@
-﻿namespace Assets.Scripts.Models
+﻿using UnityEngine;
+
+namespace Assets.Scripts.Models
 {
     public class Player
     {
         private readonly float moveSpeed;
         private readonly float jumpModifier;
+        private readonly float kickModifier;
 
-        public float MoveSpeed
+        private bool isGrounded;
+        private bool canDoubleJump;
+        private bool wasKicked;
+        private PlayerType playerInRangeToKick;
+        private float direction;
+
+        public float MoveSpeedMagnitude
         {
             get
             {
-                return this.moveSpeed;
+                return this.moveSpeed * this.direction;
             }
         }
 
-        public float JumpModifier
+        public float JumpMagnitude
         {
             get
             {
@@ -21,8 +30,13 @@
             }
         }
 
-        private bool isGrounded;
-        private bool canDoubleJump;
+        public float KickMagnitude
+        {
+            get
+            {
+                return this.kickModifier * this.direction;
+            }
+        }
 
         public bool CanJump
         {
@@ -32,10 +46,22 @@
             }
         }
 
+        public bool WasKicked
+        {
+            get
+            {
+                return this.wasKicked;
+            }
+        }
+
+        public bool WasMoving { get; private set; }
+
         public Player()
         {
             this.moveSpeed = 10.0f;
             this.jumpModifier = 20.0f;
+            this.kickModifier = 20.0f;
+            this.playerInRangeToKick = (PlayerType)(-1);
         }
 
         public void Landed()
@@ -53,6 +79,32 @@
             }
 
             this.isGrounded = false;
+        }
+
+        public void SetPlayerInRangeToKick(PlayerType playerToKick)
+        {
+            this.playerInRangeToKick = playerToKick;
+        }
+
+        public PlayerType Kick()
+        {
+            return this.playerInRangeToKick;
+        }
+
+        public void SetPlayerOutRangeForKicking()
+        {
+            this.playerInRangeToKick = (PlayerType)(-1);
+        }
+
+        public void StartedMoving(float input)
+        {
+            this.direction = Mathf.Sign(input);
+            this.WasMoving = true;
+        }
+
+        public void StopedMoving()
+        {
+            this.WasMoving = false;
         }
     }
 }

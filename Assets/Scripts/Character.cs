@@ -8,7 +8,9 @@ public class Character : MonoBehaviour, IPlayerView
     private new Rigidbody2D rigidbody2D;
     private Vector2 moveSpeed;
     private Vector2 jumpForce;
+    private Vector2 kickForce;
     private IGamePresenter gamePresenter;
+
     public PlayerType Player;
 
     public PlayerType PlayerType
@@ -19,17 +21,32 @@ public class Character : MonoBehaviour, IPlayerView
         }
     }
 
+    private float facingDirection
+    {
+        get
+        {
+            return this.transform.localScale.x;
+        }
+    }
+
     public void Move(float speed)
     {
-        this.moveSpeed = new Vector2(speed, this.rigidbody2D.velocity.y);
+        this.moveSpeed = Vector2.right * speed;
 
-        var directionModifier = speed / Mathf.Abs(speed);
+        var directionModifier = Mathf.Sign(speed);
         this.transform.localScale = new Vector2(directionModifier, 1);
     }
 
     public void Stop()
     {
-        this.moveSpeed = new Vector2(0.0f, this.rigidbody2D.velocity.y);
+        this.moveSpeed = Vector2.zero;
+    }
+
+    public void Kick(float playerKickMagnitude)
+    {
+        var verticalComponent = Vector2.up * Mathf.Abs(playerKickMagnitude);
+        var horizontalComponent = Vector2.right * playerKickMagnitude;
+        this.kickForce = (verticalComponent + horizontalComponent) / 2;
     }
 
     public void Jump(float jumpModifier)
@@ -51,10 +68,24 @@ public class Character : MonoBehaviour, IPlayerView
     //FixedUpdate is called every fixed framerate frame
     private void FixedUpdate()
     {
-        this.rigidbody2D.velocity = moveSpeed;
+        if(this.kickForce == Vector2.zero)
+        {
+            var verticalVelocity = Vector2.up * this.rigidbody2D.velocity.y;
+            this.rigidbody2D.velocity = verticalVelocity + this.moveSpeed;
+        }
 
-        this.rigidbody2D.AddForce(this.jumpForce, ForceMode2D.Impulse);
-        this.jumpForce = Vector2.zero;
+        if(this.jumpForce != Vector2.zero)
+        {
+            this.rigidbody2D.AddForce(this.jumpForce, ForceMode2D.Impulse);
+            this.jumpForce = Vector2.zero;
+        }
+
+        if (this.kickForce != Vector2.zero)
+        {
+            this.rigidbody2D.AddForce(this.kickForce, ForceMode2D.Impulse);
+            this.moveSpeed = Vector2.right * this.kickForce.x;
+            this.kickForce = Vector2.zero;
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
