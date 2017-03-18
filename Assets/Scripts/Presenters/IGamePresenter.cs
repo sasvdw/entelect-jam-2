@@ -56,6 +56,7 @@ namespace Assets.Scripts.Presenters
             if(Math.Abs(input) < 0.0001f)
             {
                 playerView.Stop();
+                return;
             }
 
             playerView.Move(input * player.MoveSpeed);

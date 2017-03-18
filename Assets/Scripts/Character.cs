@@ -9,7 +9,6 @@ public class Character : MonoBehaviour, IPlayerView
     private Vector2 moveSpeed;
     private Vector2 jumpForce;
     private IGamePresenter gamePresenter;
-    private bool moving;
     public PlayerType Player;
 
     public PlayerType PlayerType
@@ -23,13 +22,14 @@ public class Character : MonoBehaviour, IPlayerView
     public void Move(float speed)
     {
         this.moveSpeed = new Vector2(speed, this.rigidbody2D.velocity.y);
-        this.moving = true;
+
+        var directionModifier = speed / Mathf.Abs(speed);
+        this.transform.localScale = new Vector2(directionModifier, 1);
     }
 
     public void Stop()
     {
-        this.moving = false;
-        this.moveSpeed = Vector2.zero;
+        this.moveSpeed = new Vector2(0.0f, this.rigidbody2D.velocity.y);
     }
 
     public void Jump(float jumpModifier)
@@ -51,10 +51,7 @@ public class Character : MonoBehaviour, IPlayerView
     //FixedUpdate is called every fixed framerate frame
     private void FixedUpdate()
     {
-        if(this.moving)
-        {
-            this.rigidbody2D.velocity = moveSpeed;
-        }
+        this.rigidbody2D.velocity = moveSpeed;
 
         this.rigidbody2D.AddForce(this.jumpForce, ForceMode2D.Impulse);
         this.jumpForce = Vector2.zero;
