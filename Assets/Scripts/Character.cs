@@ -3,29 +3,33 @@ using Assets.Scripts.Presenters;
 using Assets.Scripts.Views;
 using UnityEngine;
 
-public class PlayerMovement : MonoBehaviour, IPlayerView
+public class Character : MonoBehaviour, IPlayerView
 {
     private new Rigidbody2D rigidbody2D;
-    private int collidersStandingOn;
     private Vector2 moveSpeed;
     private Vector2 jumpForce;
+    private IGamePresenter gamePresenter;
+    private bool moving;
+    public PlayerType Player;
 
     public PlayerType PlayerType
     {
         get
         {
-            return PlayerType.One;
+            return this.Player;
         }
-    }
-
-    public PlayerMovement()
-    {
-        GamePresenter.Instance.AddPlayer(this);
     }
 
     public void Move(float speed)
     {
         this.moveSpeed = new Vector2(speed, this.rigidbody2D.velocity.y);
+        this.moving = true;
+    }
+
+    public void Stop()
+    {
+        this.moving = false;
+        this.moveSpeed = Vector2.zero;
     }
 
     public void Jump(float jumpModifier)
@@ -36,7 +40,9 @@ public class PlayerMovement : MonoBehaviour, IPlayerView
     // Use this for initialization
     private void Start()
     {
+        GamePresenter.Instance.AddPlayer(this);
         this.rigidbody2D = this.gameObject.GetComponent<Rigidbody2D>();
+        this.gamePresenter = GamePresenter.Instance;
     }
 
     // Update is called once per frame
@@ -45,7 +51,10 @@ public class PlayerMovement : MonoBehaviour, IPlayerView
     //FixedUpdate is called every fixed framerate frame
     private void FixedUpdate()
     {
-        this.rigidbody2D.velocity = moveSpeed;
+        if(this.moving)
+        {
+            this.rigidbody2D.velocity = moveSpeed;
+        }
 
         this.rigidbody2D.AddForce(this.jumpForce, ForceMode2D.Impulse);
         this.jumpForce = Vector2.zero;
@@ -57,15 +66,6 @@ public class PlayerMovement : MonoBehaviour, IPlayerView
         {
             return;
         }
-        this.collidersStandingOn++;
-    }
-
-    private void OnTriggerExit2D(Collider2D other)
-    {
-        if(other.isTrigger)
-        {
-            return;
-        }
-        this.collidersStandingOn--;
+        this.gamePresenter.PlayerLanded(this.PlayerType);
     }
 }

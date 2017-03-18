@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Assets.Scripts.Models;
 using Assets.Scripts.Views;
 
@@ -11,6 +12,8 @@ namespace Assets.Scripts.Presenters
         void HandleHorizontalInput(PlayerType playerType, float input);
 
         void HandleJumpInput(PlayerType playerType);
+
+        void PlayerLanded(PlayerType playerType);
     }
 
     public class GamePresenter : IGamePresenter
@@ -26,7 +29,7 @@ namespace Assets.Scripts.Presenters
         }
 
         private readonly IDictionary<PlayerType, IPlayerView> playerViews;
-        private readonly Dictionary<PlayerType, Player> players;
+        private readonly IDictionary<PlayerType, Player> players;
 
         public GamePresenter()
         {
@@ -48,13 +51,32 @@ namespace Assets.Scripts.Presenters
         public void HandleHorizontalInput(PlayerType playerType, float input)
         {
             var player = this.players[playerType];
-            this.playerViews[playerType].Move(input * player.MoveSpeed);
+            var playerView = this.playerViews[playerType];
+
+            if(Math.Abs(input) < 0.0001f)
+            {
+                playerView.Stop();
+            }
+
+            playerView.Move(input * player.MoveSpeed);
         }
 
         public void HandleJumpInput(PlayerType playerType)
         {
             var player = this.players[playerType];
+
+            if(!player.CanJump)
+            {
+                return;
+            }
+
             this.playerViews[playerType].Jump(player.JumpModifier);
+            player.Jumped();
+        }
+
+        public void PlayerLanded(PlayerType playerType)
+        {
+            this.players[playerType].Landed();
         }
     }
 }

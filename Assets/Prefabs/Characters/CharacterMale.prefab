@@ -22,8 +22,8 @@ GameObject:
   - component: {fileID: 212325553480967222}
   - component: {fileID: 50240254404794168}
   - component: {fileID: 70010635893975186}
-  - component: {fileID: 114016843893791906}
   - component: {fileID: 70340094481613846}
+  - component: {fileID: 114016843893791906}
   m_Layer: 0
   m_Name: CharacterMale
   m_TagString: Untagged
@@ -103,8 +103,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f96aa5bced1d4374dabfa98db2f8adb6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaxSpeed: 10
-  JumpModifier: 20
+  Player: 0
 --- !u!212 &212325553480967222
 SpriteRenderer:
   m_ObjectHideFlags: 1

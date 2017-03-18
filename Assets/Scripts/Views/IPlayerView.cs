@@ -9,5 +9,7 @@ namespace Assets.Scripts.Views
         void Move(float speed);
 
         void Jump(float jumpModifier);
+
+        void Stop();
     }
 }
